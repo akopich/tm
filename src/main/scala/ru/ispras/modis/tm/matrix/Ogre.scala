@@ -141,22 +141,19 @@ abstract class Ogre protected(private val expectationMatrix: Array[Array[Float]]
     }
 
     private def forfor(rowOp: Int => Float)(rowColOp: (Int, Int, Float) => Unit, parallel : Boolean = true) = {
+        val actionForRow = (rowIndex : Int) => {
+            val intermediate = rowOp(rowIndex)
+            for (columnIndex <- 0 until numberOfColumns) {
+                rowColOp(rowIndex, columnIndex, intermediate)
+            }
+        }
+
         val rowsIndexes = 0 until numberOfRows
 
         if (parallel) {
-            for (rowIndex <- rowsIndexes.toPar) {
-                val intermediate = rowOp(rowIndex)
-                for (columnIndex <- 0 until numberOfColumns) {
-                    rowColOp(rowIndex, columnIndex, intermediate)
-                }
-            }
+            rowsIndexes.toPar.foreach(actionForRow)
         } else {
-            for (rowIndex <- rowsIndexes) {
-                val intermediate = rowOp(rowIndex)
-                for (columnIndex <- 0 until numberOfColumns) {
-                    rowColOp(rowIndex, columnIndex, intermediate)
-                }
-            }
+            rowsIndexes.foreach(actionForRow)
         }
     }
 
